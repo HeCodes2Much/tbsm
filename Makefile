@@ -1,16 +1,12 @@
 PREFIX ?= /usr
-MANDIR ?= $(PREFIX)/share/man
 
 all:
-	@echo Run \'make install\' to install Bfetch.
+	@echo Run \'make install\' to install startX.
 
 install:
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
-	@mkdir -p $(DESTDIR)$(MANDIR)/man1
-	@cp -p bfetch $(DESTDIR)$(PREFIX)/bin/bfetch
-	@cp -p bfetch.1 $(DESTDIR)$(MANDIR)/man1
-	@chmod 755 $(DESTDIR)$(PREFIX)/bin/bfetch
+	@cp -p startX $(DESTDIR)$(PREFIX)/bin/startX
+	@chmod 755 $(DESTDIR)$(PREFIX)/bin/startX
 
 uninstall:
-	@rm -rf $(DESTDIR)$(PREFIX)/bin/bfetch
-	@rm -rf $(DESTDIR)$(MANDIR)/man1/bfetch.1*
+	@rm -rf $(DESTDIR)$(PREFIX)/bin/startX
