@@ -1,12 +1,12 @@
 PREFIX ?= /usr
 
 all:
-	@echo Run \'make install\' to install startX.
+	@echo Run \'make install\' to install tbsm.
 
 install:
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
-	@cp -p startX $(DESTDIR)$(PREFIX)/bin/startX
-	@chmod 755 $(DESTDIR)$(PREFIX)/bin/startX
+	@cp -p tbsm $(DESTDIR)$(PREFIX)/bin/tbsm
+	@chmod 755 $(DESTDIR)$(PREFIX)/bin/tbsm
 
 uninstall:
-	@rm -rf $(DESTDIR)$(PREFIX)/bin/startX
+	@rm -rf $(DESTDIR)$(PREFIX)/bin/tbsm
