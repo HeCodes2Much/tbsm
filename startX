@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+#------------------------------------------------------------------------------
+# Path         - /usr/bin/startX
+# GitHub       - https://github.com/The-Repo-Club/
+# Author       - The-Repo-Club [wayne6324@gmail.com]
+# Start On     - Thurs 28 Oct 21:15:06 GMT 2021
+# Modified On  - Mon 01 Nov 21:15:06 GMT 2021
+#------------------------------------------------------------------------------
+
+Version=2021.11.01
+
+## Set Colors (copied from makepkg)
+if tput setaf 0 >/dev/null; then
+    ALL_OFF="$(tput sgr0)"
+    BOLD=$(tput bold)
+    RED="$(tput setaf 1)"
+    GREEN="$(tput setaf 2)"
+    YELLOW="$(tput setaf 3)"
+    BLUE="$(tput setaf 4)"
+    PURPLE="$(tput setaf 5)"
+    CYAN="$(tput setaf 6)"
+else
+    ALL_OFF="\e[1;0m"
+    BOLD="\[1;1m"
+    RED="\e[1;31m"
+    GREEN="\e[1;32m"
+    YELLOW="\e[1;33m"
+    BLUE="\e[1;34m"
+    PURPLE="\e[1:35m"
+    CYAN="\e[1:36m"
+fi
+COLS="$(tput cols)"
+
+readonly ALL_OFF BOLD RED GREEN YELLOW BLUE PURPLE CYAN COLS
+
+repeat(){
+	printf "%.0s$1" $(seq "45") && echo
+}
+
+for file in /usr/share/xsessions/*; do
+    while IFS= read -r line; do
+        if [[ $line == Exec* ]]; then
+            options+=("${GREEN}${line##*=}${ALL_OFF}")
+        fi
+    done < $file
+done
+
+repeat '-'
+printf "%s v%s\n" "${BLUE}${BOLD}T${ALL_OFF}erminal ${BLUE}${BOLD}B${ALL_OFF}ased ${BLUE}${BOLD}S${ALL_OFF}ession ${BLUE}${BOLD}M${ALL_OFF}anager" "$Version"
+repeat '-'
+printf "\n%s\n" "PLEASE CHOSE A DESKTOP!"
+
+PS3="${PURPLE}Select a Number: ${ALL_OFF}"
+while true
+do
+    select opt in "${options[@]}" "${RED}exit${ALL_OFF}"
+    do
+        if [[ ! -z $opt ]]; then
+            opt=$(echo -e $opt | sed -r "s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g" | tr -cd '[a-zA-Z0-9-' )
+            case $opt in
+                "exit")
+                    exit
+                    ;;
+                *)
+                    if [ ! "$TERM" = "linux" ]; then
+                        echo "Dont run this outside of tty!"
+                        exit
+                    fi
+                    echo -e "export DESKTOP_SESSION=$opt" > /tmp/desktoprc
+                    source "/tmp/desktoprc"
+                    startx
+                    exit
+                    ;;
+            esac
+        fi
+    done
+done
