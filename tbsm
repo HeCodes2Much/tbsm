@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Path         - /usr/bin/startX
+# Path         - /usr/bin/tbsm
 # GitHub       - https://github.com/The-Repo-Club/
 # Author       - The-Repo-Club [wayne6324@gmail.com]
 # Start On     - Thurs 28 Oct 21:15:06 GMT 2021
-# Modified On  - Mon 01 Nov 21:15:06 GMT 2021
+# Modified On  - Mon 08 Nov 13:40:52 GMT 2021
 #------------------------------------------------------------------------------
 
-Version=2021.11.01
+Version=2021.11.08
 
 ## Set Colors (copied from makepkg)
 if tput setaf 0 >/dev/null; then
