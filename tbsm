@@ -355,6 +355,9 @@ runSession() {
           if [[ $runInTTY ]]; then
               info "Run command: startx ${bin[@]} -- ${XserverArg[@]}"
               desktop="${bin%[[:space:]]*}"
+              if [ -f "$HOME/.xinitrc" ]; then
+                  source $HOME/.xinitrc
+              fi
               DESKTOP_SESSION="${desktop##*/}" startx ${bin[@]} -- ${XserverArg[@]}
           else
               info "Not running in tty. Will not start X session." "0"
@@ -811,8 +814,7 @@ fi
 #
 # Hey! Ho! Let's Go!
 #
-while popCommand
-do
+while popCommand; do
     case "${command}" in
         blacklist|b)    cmdBlacklist "add"                          ; ;;
         -blacklist|-b)   cmdBlacklist "remove"                       ; ;;
@@ -842,43 +844,6 @@ do
     -[bw][1-9])      pushCommand ${command:0:2} ${command:2}     ; ;;
 
     *)              error "Unknown command: ${command}"         ; ;;
-esac
-
-prompt
-
+    esac
+    prompt
 done
-
-# repeat(){
-#     printf "%.0s$1" $(seq "45") && echo
-# }
-#
-# repeat '-'
-# printf "%s v%s\n" "${BLUE}${BOLD}T${ALL_OFF}erminal ${BLUE}${BOLD}B${ALL_OFF}ased ${BLUE}${BOLD}S${ALL_OFF}ession ${BLUE}${BOLD}M${ALL_OFF}anager" "$myVersion"
-# repeat '-'
-# printf "\n%s\n" "PLEASE CHOSE A DESKTOP!"
-#
-# PS3="${PURPLE}Select a Number: ${ALL_OFF}"
-# while true
-# do
-#     select opt in "${options[@]}" "${RED}exit${ALL_OFF}"
-#     do
-#         if [[ ! -z $opt ]]; then
-#             opt=$(echo -e $opt | sed -r "s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g" | tr -cd '[a-zA-Z0-9-' )
-#             case $opt in
-#                 "exit")
-#                     exit
-#                     ;;
-#                 *)
-    #                     if [ ! "$TERM" = "linux" ]; then
-    #                         echo "Dont run this outside of tty!"
-    #                         exit
-    #                     fi
-    #                     echo -e "export DESKTOP_SESSION=$opt" > /tmp/desktoprc
-    #                     source "/tmp/desktoprc"
-    #                     startx
-    #                     exit
-    #                     ;;
-    #             esac
-    #         fi
-    #     done
-    # done
