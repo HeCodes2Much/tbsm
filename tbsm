@@ -331,7 +331,7 @@ printMenuList() {
     fi
 
     for ((count = 0; count < ${#nameList[@]}; count++)); do
-        print "${colArchBlue} $((count+1)) ${colGreen} ${nameList[${count}]} ${colWhite}";
+        print "${colArchBlue} $((count+1))${colRed}  ${colGreen}${nameList[${count}]} ${colWhite}";
     done
 }
 
