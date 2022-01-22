@@ -1,41 +1,27 @@
 #!/usr/bin/env bash
-#-*-coding:utf-8 -*-
-#Auto updated?
-#   Yes
-#File :
-#   tbsm
-#Author :
-#   The-Repo-Club [wayne6324@gmail.com]
-#Github :
-#   https://github.com/The-Repo-Club/
-#
-#Created:
-#   Sat 22 January 2022, 03:03:50 PM [GMT]
-#Modified:
-#   Sat 22 January 2022, 03:21:32 PM [GMT]
-#
-#Description:
-#   A pure bash session and application launcher
-#
-#Dependencies:
-#   bash
-#
-# shellcheck disable=2034
+
+#------------------------------------------------------------------------------
+# Path         - /usr/bin/tbsm
+# GitHub       - https://github.com/The-Repo-Club/
+# Author       - The-Repo-Club [wayne6324@gmail.com]
+# Start On     - Thurs 28 Oct 21:15:06 GMT 2021
+# Modified On  - Mon 08 Nov 13:40:52 GMT 2021
+#------------------------------------------------------------------------------
 
 declare -r myName="tbsm"
-# declare -r myLongName="Terminal Based Session Manager"
+declare -r myLongName="Terminal Based Session Manager"
 declare -r myVersion="2021.11.08"
 declare -r myDescription="A pure bash session and application launcher"
-# declare -r systemConfigDir="/etc/xdg/${myName}"
+declare -r systemConfigDir="/etc/xdg/${myName}"
 declare -r configDir="${HOME}/.config/${myName}"
-# declare -r installPfad=""
+declare -r installPfad=""
 declare runInTTY="yes"
 declare XserverArg="@Xdisplay@ -nolisten tcp"
 declare protectedVerbose
 declare lastSession
-# declare -i lastSessionIndex
+declare -i lastSessionIndex
 declare defaultSession
-# declare -i defaultSessionIndex
+declare -i defaultSessionIndex
 declare -a binList=()
 declare -a nameList=()
 declare -a flagList=()
@@ -89,11 +75,11 @@ popCommand() {
     local last=(${#cmdStack[@]}-1)
 
     command=""
-    # shellcheck disable=2128
+
     [[ "${last}" -lt 0 ]] && return 1
-    # shellcheck disable=2128
+
     command="${cmdStack[${last}]}"
-    cmdStack=("${cmdStack[@]:0:last}")
+    cmdStack=(${cmdStack[@]:0:last})
 }
 
 popArgument() {
@@ -108,13 +94,11 @@ popArgument() {
 
     argument=""
 
-    # shellcheck disable=2128
     [[ "${last}" -lt 0 ]] && return 1
-    # shellcheck disable=2128
     [[ "${cmdStack[${last}]}" == "quit" ]] && return 1
-    # shellcheck disable=2128
+
     argument="${cmdStack[${last}]}"
-    cmdStack=("${cmdStack[@]:0:last}")
+    cmdStack=(${cmdStack[@]:0:last})
 }
 
 popListIndex() {
@@ -139,7 +123,7 @@ popListIndex() {
     listIndex=$((argument - 1))
 }
 
-hasOption() { [[ "${argList[*]}" == *"--$1"* ]]; }
+hasOption() { [[ "${argList[@]}" == *"--$1"* ]]; }
 
 # It's better not to use echo
 # http://unix.stackexchange.com/a/65819
@@ -215,9 +199,9 @@ fillLists() {
     fillBlacklist
     clearLists "keepBlack"
 
-    for pfad in "${sessionPfads[@]}"; do
+    for pfad in ${sessionPfads[@]}; do
         readDesktopFiles "$pfad" "$warnOnly"
-        missingSessionPfads+="$?"
+        let missingSessionPfads+="$?"
     done
     if [[ $missingSessionPfads -eq ${#sessionPfads[@]} ]]; then
         warn "${FUNCNAME[0]}: No session paths found"
@@ -239,30 +223,28 @@ parseDesktopFiles() {
 
     for ((count = 0; count < ${#desktopFiles[@]}; count++)); do
         # Filter blacklisted entries
-        realLink=("$(readlink -m "${desktopFiles[${count}]}")")
+        realLink=("$(readlink -m ${desktopFiles[${count}]})")
         # http://stackoverflow.com/a/15394738
-        # shellcheck disable=2128
-        [[ ${blacklist[*]} =~ ${realLink} ]] && continue
+        [[ "${blacklist[@]}" =~ "${realLink}" ]] && continue
 
         # TryExec key is there to determine if executable is present,
         # but as we are going to test the Exec key anyway, we ignore it.
         # http://stackoverflow.com/a/22550813
-        execKey=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Exec=//p}' "${desktopFiles[${count}]}")
-        nameKey=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Name=//p}' "${desktopFiles[${count}]}")
+        execKey=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Exec=//p}' ${desktopFiles[${count}]})
+        nameKey=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Name=//p}' ${desktopFiles[${count}]})
         # Sadly have only the plasma.desktop file an entry with "Type=XSession", all
         # other (sorry, the few I have seen) says "Type=Application", so work around this
         flag="X"
-        # shellcheck disable=2128
         if [[ $realLink == *"xsessions"* ]]; then
             flag="S" # Treat all in /usr/share/xsessions as such
         elif [[ $realLink == *"wayland-sessions"* ]]; then
             flag="W" # Treat all in /usr/share/wayland-sessions as such
         else
-            val=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Type=//p}' "${desktopFiles[${count}]}")
+            val=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Type=//p}' ${desktopFiles[${count}]})
             if [[ "${val}" == "XSession" ]]; then
                 flag="S" # Takes action when there is a real local file, not a link
             else
-                val=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Terminal=//p}' "${desktopFiles[${count}]}")
+                val=$(sed -nr '/^\[Desktop Entry\]/,/^\[/{s/^Terminal=//p}' ${desktopFiles[${count}]})
                 [[ "${val}" == "true" ]] && flag="C"
             fi
         fi
@@ -270,18 +252,17 @@ parseDesktopFiles() {
             # The .desktop files allow there Exec keys to use $PATH lookup.
             binItem="$(which "${execKey%%[ ]*}" 2>/dev/null)"
             # If which fails to return valid path, skip to next .desktop file.
-            if [[ ! $? ]]; then
+            if [[ $? != 0 ]]; then
                 warn "Skip '$nameKey' Binary found not: ${execKey%%[ ]*}"
                 continue
             fi
-            binList+=("${binItem} ${execKey#*"${execKey%%[ ]*}"}")
+            binList+=("${binItem} ${execKey#*${execKey%%[ ]*}}")
             flagList+=("${flag}")
-            if [[ "$flag" == "W" ]] && [[ " ${nameList[*]}" =~ ${nameKey} ]]; then
+            if [[ "$flag" == "W" ]] && [[ " ${nameList[@]} " =~ " ${nameKey} " ]]; then
                 nameList+=("${nameKey} (Wayland)")
             else
                 nameList+=("${nameKey}")
             fi
-            # shellcheck disable=2128
             linkList+=("${realLink}")
         fi
     done
@@ -296,7 +277,6 @@ readDesktopFiles() {
         # Given -maxdepth 1 to fix trouble at storing default/lastSession
         # links above blacklist/whitelist directorys
         # Why use -regex and not -name ?
-        # shellcheck disable=2207 # This is needed and breaks with ""
         desktopFiles=($(find "${filePfad}" -maxdepth 1 -regex .\*.desktop | sort))
         parseDesktopFiles
     else
@@ -322,7 +302,6 @@ cmdSearch() {
     clearLists
 
     if [[ -d "${filePfad}" ]]; then
-        # shellcheck disable=2207 # This is needed and breaks with ""
         desktopFiles=($(grep -Ril --include="*.desktop" "$pattern" "$filePfad" | sort))
         info "Found matches: ${#desktopFiles[@]}"
         parseDesktopFiles
@@ -334,18 +313,24 @@ cmdSearch() {
     printMenuList
 }
 
-printMenuHeader() {
-    # When called without argument set title to menuTitle
-    if [[ ! "${noMenuHeader}" ]]; then
-        print "${menuSeparator}${txtNormal}"
-        print "${menuTitle}"
-        print "${menuSeparator}${txtNormal}"
+printMenuSeparator() {
+    if [[ ! "${noSeparator}" ]]; then
+        print "${colSeparator}${menuSeparator}${txtNormal}"
     fi
 }
 
-printMenuFooter() {
-    print "${menuSeparator}${txtNormal}"
+printMenuHeader() {
+    # When called without argument set title to menuTitle
+    local title=${@:-${menuTitle}}
+
+    if [[ ! "${noMenuHeader}" ]]; then
+        printMenuSeparator
+        print "${title}"
+        printMenuSeparator
+    fi
 }
+
+printMenuFooter() { printMenuSeparator; }
 
 printMenuList() {
     if [[ "${#nameList[@]}" == "0" ]]; then
@@ -354,7 +339,7 @@ printMenuList() {
     fi
 
     for ((count = 0; count < ${#nameList[@]}; count++)); do
-        print "${colArchBlue} $((count + 1)): ${colGreen}${nameList[${count}]} ${colWhite}"
+        print "${colArchBlue} $((count + 1))${colRed}  ${colGreen}${nameList[${count}]} ${colWhite}"
     done
 }
 
@@ -371,18 +356,17 @@ runSession() {
     # Run $bin according to its flag.
     case ${flagList[${listIndex}]} in
     C) # Console programs
-        info "Run command: ${bin[*]}"
-        "${bin[@]}"
+        info "Run command: ${bin[@]}"
+        ${bin[@]}
         ;;
     S) # X Sessions
         if [[ $runInTTY ]]; then
-            info "Run command: startx ${bin[*]} -- ${XserverArg[*]}"
+            info "Run command: startx ${bin[@]} -- ${XserverArg[@]}"
             desktop="${bin%[[:space:]]*}"
             if [ -f "$HOME/.xinitrc" ]; then
-                # shellcheck disable=1091
-                source "${HOME}"/.xinitrc
+                source $HOME/.xinitrc
             fi
-            DESKTOP_SESSION="${desktop##*/}" startx "${bin[@]}" -- "${XserverArg[@]}"
+            DESKTOP_SESSION="${desktop##*/}" startx ${bin[@]} -- ${XserverArg[@]}
         else
             info "Not running in tty. Will not start X session." "0"
             return 1
@@ -390,10 +374,10 @@ runSession() {
         ;;
     W) # Wayland Sessions
         if [[ $runInTTY ]]; then
-            [[ "${bin[*]}" =~ (^| )(/.*/)?dbus-run-session( |$) ]] ||
+            [[ "${bin[@]}" =~ (^| )(/.*/)?dbus-run-session( |$) ]] ||
                 waylandSessionArgs+=$(which dbus-run-session 2>/dev/null)
-            info "Run command: XDG_SESSION_TYPE=wayland ${waylandSessionArgs:+${waylandSessionArgs[@]} }${bin[*]}"
-            XDG_SESSION_TYPE=wayland ${waylandSessionArgs:+${waylandSessionArgs[@]} }"${bin[*]}"
+            info "Run command: XDG_SESSION_TYPE=wayland ${waylandSessionArgs:+${waylandSessionArgs[@]} }${bin[@]}"
+            XDG_SESSION_TYPE=wayland ${waylandSessionArgs:+${waylandSessionArgs[@]} }${bin[@]}
         else
             info "Not running in tty. Will not start Wayland session." "0"
             return 1
@@ -401,11 +385,11 @@ runSession() {
         ;;
     X) # Applications
         if [[ $runInTTY ]]; then
-            info "Run command: startx ${bin[*]} -- ${XserverArg[*]}"
-            startx "${bin[@]}" -- "${XserverArg[@]}"
+            info "Run command: startx ${bin[@]} -- ${XserverArg[@]}"
+            startx ${bin[@]} -- ${XserverArg[@]}
         else
-            info "Not running in tty, run: ${bin[*]}"
-            "${bin[@]}"
+            info "Not running in tty, run: ${bin[@]}"
+            ${bin[@]}
         fi
         ;;
     -) # Old cdm/tdm stuff, not used
@@ -418,7 +402,7 @@ runSession() {
 
     # Exit or not. Show full menu if no command left
     if popCommand; then
-        pushCommand "${command}"
+        pushCommand ${command}
     else
         pushCommand "menu"
     fi
@@ -432,16 +416,14 @@ showQuickMenu() {
         return
     fi
 
-    local menuText
-    menuText="${promptCol}${quickPrompt}${txtNormal} [*]"
-    [[ -n "${defaultSession}" ]] && menuText=("${menuText}  [!]${nameList[0]}")
-    # shellcheck disable=2128
-    [[ -n "${lastSession}" && "${lastSession}" != "${defaultSession}" ]] && menuText=("${menuText} [ ]${nameList[1]}")
+    local promptText
+    promptText="${promptCol}${quickPrompt}${txtNormal} [*]"
+    [[ -n "${defaultSession}" ]] && promptText=("${promptText}  [!]${nameList[0]}")
+    [[ -n "${lastSession}" && "${lastSession}" != "${defaultSession}" ]] && promptText=("${promptText} [ ]${nameList[1]}")
 
-    # shellcheck disable=2128
-    menuTextVal="${menuText} "
+    promptText="${promptText} "
 
-    read -er -i "!" -p "${menuTextVal}" userInput
+    read -er -i "!" -p "${promptText}" userInput
 
     if [[ "${userInput}" == "!" ]]; then
         runSession "0"
@@ -449,12 +431,12 @@ showQuickMenu() {
         runSession "1"
     else
         # Don't quote here or it will not work as intended
-        pushCommand "${userInput#!}"
+        pushCommand ${userInput#!}
     fi
 }
 
 showMenu() {
-    printMenuHeader
+    printMenuHeader $1
     printMenuList
     printMenuFooter
 }
@@ -484,7 +466,7 @@ addToList() {
         ok=1
     done
 
-    if (! $ok); then
+    if ((!$ok)); then
         # FUNCNAME is a build in bash array. We cut leading 3 char "cmd"
         error "${FUNCNAME[1]:3} need a valid session number"
         return 1
@@ -512,9 +494,8 @@ removeFromList() {
             ;; # Error but we ignore it
         esac
 
-        for file in "${configDir}"/"${list}"/*; do
-            link=("$(readlink -m "${file}")")
-            # shellcheck disable=2128
+        for file in ${configDir}/${list}/*; do
+            link=("$(readlink -m ${file})")
             if [[ "${link}" == "${linkList[${listIndex}]}" ]]; then
                 unlink "$file"
                 info "Session removed from ${list}: ${nameList[${listIndex}]}" "1"
@@ -524,7 +505,7 @@ removeFromList() {
 
     done
 
-    if (! $ok || $err); then
+    if ((!$ok || $err)); then
         # FUNCNAME is a build in bash array. We cut leading 3 char "cmd"
         error "${FUNCNAME[1]:3} needs a valid session number"
         return 1
@@ -565,9 +546,8 @@ cmdDoc() {
     local docPath="/usr/share/doc/tbsm"
 
     popArgument
-    # shellcheck disable=2207 # This is needed and breaks with ""
-    docMatch=($(find "${docPath}" -not -type d -iname \*"${argument}"\* | sort))
-    # shellcheck disable=2128
+    docMatch=($(find "${docPath}" -not -type d -iname \*${argument}\* | sort))
+
     if [[ ${#docMatch[@]} -gt 1 ]]; then
         print "Available documentation:"
         for doc in "${docMatch[@]}"; do
@@ -676,7 +656,7 @@ cmdLogout() {
     if [[ $runInTTY ]]; then
         # Logout is not easy from inside a script. Can you do it better?
         myPid=$$
-        kill -SIGHUP "$(ps -ef | awk '($2=="'$myPid'"){print $3}')"
+        kill -SIGHUP $(ps -ef | awk '($2=="'$myPid'"){print $3}')
     else
         exitNormal
     fi
@@ -753,8 +733,8 @@ prompt() {
         # the user may write down his command the input would discard.
         # That's why we wait for the first key stroke
         # FIXME: With -e is a new line printed after key stroke
-        read -sr -n 1 -t 12 -p "${promptText} " userInput
-        if [[ $? -gt 128 ]]; then
+        read -s -n 1 -t 12 -p "${promptText} " userInput
+        if [[ $? > 128 ]]; then
             print $'\r'"${menuHint} 1-${#nameList[@]} b d l m qm q r s w X ?"
         elif [[ -z "${userInput}" ]]; then
             pushCommand "quick-menu"
@@ -764,7 +744,7 @@ prompt() {
             userInput=""
             # Flush keyboard if e.q. cursor key was pressed
             # http://superuser.com/a/364421
-            read -rt 0.01 -n 100
+            read -t 0.01 -n 100
             printf $'\r'
             continue
         fi
@@ -772,7 +752,7 @@ prompt() {
         printf $'\r'
         # http://stackoverflow.com/a/25000195
         read -erp "${promptText} " -i "$userInput" -a userInput
-        # shellcheck disable=2128
+
         if [[ -z "${userInput}" ]]; then
             pushCommand "quick-menu"
         elif [[ "${userInput[0]}" =~ ^[1-9]*[0-9]+$ ]]; then
@@ -848,7 +828,7 @@ else
     IamToStupid="$*"
     IamToStupid="${IamToStupid%%--*}"
     # Don't quote here or it will not work as desired
-    pushCommand "${IamToStupid[@]}"
+    pushCommand ${IamToStupid[@]}
 fi
 
 #
@@ -881,8 +861,8 @@ while popCommand; do
         ;;
 
     # Try to catch lazy written b w commands
-    [bw][1-9]) pushCommand "${command:0:1}" "${command:1}" ;;
-    -[bw][1-9]) pushCommand "${command:0:2}" "${command:2}" ;;
+    [bw][1-9]) pushCommand ${command:0:1} ${command:1} ;;
+    -[bw][1-9]) pushCommand ${command:0:2} ${command:2} ;;
 
     *) error "Unknown command: ${command}" ;;
     esac
