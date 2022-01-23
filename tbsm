@@ -12,7 +12,7 @@
 #Created:
 #   Sat 22 January 2022, 10:40:16 PM [GMT]
 #Modified:
-#   Sun 23 January 2022, 02:42:42 PM [GMT]
+#   Sun 23 January 2022, 04:50:04 PM [GMT]
 #
 #Description:
 #   start desktop environment in tty!
@@ -290,10 +290,14 @@ function systemStatus {
     fi
 }
 
+function versionInfo() {
+    center "${bannerTextColor} tbsm (v2022.01.23)"
+}
+
 # function to print banner
 function printBanner {
     #clear and change background page
-    # pageColor "$sysPageColor" "clear"
+    pageColor "$sysPageColor" "clear"
 
     echo -e "\n${boldText}${bannerTextColor}"
     center "████████╗██████╗ ███████╗███╗   ███╗"
@@ -303,6 +307,7 @@ function printBanner {
     center "   ██║   ██████╔╝███████║██║ ╚═╝ ██║"
     center "   ╚═╝   ╚═════╝ ╚══════╝╚═╝     ╚═╝"
     echo "${resetColor}"
+    versionInfo
     systemStatus
 }
 
@@ -410,8 +415,9 @@ if [[ -n $1 && $1 == @(-t|--test-mode) ]]; then
     # pass the desktop name or selected options to startDesktop function
     #echo "selected ${options[$choice]}"
     center " you selected \"${options[$choice]}\" item"
+    sleep 2s
     #clear and change background page
-    pageColor "$sysPageColor" "clear"
+    tput reset && clear
     exit
 fi
 
@@ -425,7 +431,6 @@ if [[ ! $DISPLAY && $XDG_VTNR -eq 1 ]]; then
     # show the menu entries for user
     menuEntries
     # pass the desktop name or selected options to startDesktop function
-    #echo "selected ${options[$choice]}"
     startDesktop ${options[$choice]}
 else
     echo "Error : Another Xserver is running!, Abort."
